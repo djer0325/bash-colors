@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# --- COLORS SUPPORT --- # starts here #
+# https://en.wikipedia.org/wiki/ANSI_escape_code
+# https://unix.stackexchange.com/questions/269077/tput-setaf-color-table-how-to-determine-color-codes
+# check if stdout is a terminal...
+# function set_color_support () { if test -t 1; then ...
+# see if it supports colors... ncolors=$(tput -T screen colors)
+# declare -i i=0; for a in ${_color_names_[@]}; do eval "declare -xr export _${a}_=\"$(tput setaf ${i})\"; (( ++i ));"; done
+# declare -rA _color_qualifiers_=(     [bold]="$(tput bold  2>/dev/null)" [underline]="$(tput smul  2>/dev/null)" ...
+declare -rx _esc_=$'\e'; # Escape code (ANSI Escape Codes)
+declare -rx _csi_="${_esc_}["; # Control Sequence Introducer (ANSI Escape Codes)
+declare -rx _ncolors_=$( tput colors 2>/dev/null || "" )
+eval "declare -rA _ac_=( $( for a in {0..255}; do printf -- " [${a}]=\"${_csi_}38;5;${a}m\""; done ) )"
+eval "declare -rA _ab_=( $( for a in {0..255}; do printf -- " [${a}]=\"${_csi_}48;5;${a}m\""; done ) )"
+declare -rA _color_qualifiers_=( [normal]="${_csi_}0m" [reset]="${_csi_}0m"
+   [bold]="${_csi_}1m"             [faint]="${_csi_}2m"      [italic]="${_csi_}3m" 
+   [underline]="${_csi_}4m"        [blink]="${_csi_}5m"     [reverse]="${_csi_}7m"
+   [underlineoff]="${_csi_}24m" [blinkoff]="${_csi_}25m" [reverseoff]="${_csi_}27m"
+   [font0]="${_csi_}10m"           [font1]="${_csi_}11m"      [font9]="${_csi_}19m" [framed]="${_csi_}51m"   
+   [encircled]="${_csi_}52m"    [standout]="$(tput smso  2>/dev/null)" )
+declare -r  _color_names_=(  black  maroon green olive  navy purple  teal silver
+                             gray   red    lime  yellow blue magenta cyan white )
+[[ -n "${_ncolors_}" ]] && {
+  for a in ${!_color_qualifiers_[@]}; do
+		eval "declare -xr export _${a}_=\"${_color_qualifiers_[${a}]}\"; (( ++i ));";
+	done
+	declare -i i=0;
+	for a in ${_color_names_[@]}; do
+		[[ ${_ncolors_} -le 16 ]] && [[ ${i} -ge 8 ]] && k=8 || k=0;
+		eval "declare -x export _${a}_=\"${_ac_[$(( ${i} - ${k} ))]}\"; (( ++i ));";
+	done
+	[[ ${_ncolors_} -lt 256 ]] && { for i in {8..15}; do k=$(( ${i} - 8 )); eval "_${_color_names_[${i}]}_=\"${_ac_[${k}]}\""; done; }
+	for a in ${_color_names_[@]}; do eval "readonly _${a}_"; done
+	#_mesg_ "support for %d colors ..." ${ncolors} 2>/dev/null
+} || {
+	for a in ${!_color_qualifiers_[@]}; do eval "declare -xr export _${a}_=\"\"; (( ++i ));"; done
+	for a in ${_color_names_}; do eval "declare -xr export _${a}_=\"\"; (( ++i ));"; done
+ 	#_mesg_ "no support for colors ..." 2>/dev/null
+}
+readonly _color_names_
+readonly _color_others_
+eval "declare -rA _cn_=( $( i=0; for a in ${_color_names_[@]}; do printf -- " [${a}]=\"${_ac_[${i}]}\""; (( ++i )); done ) )"
+#examples
+# echo "${red}error${normal}"
+# echo "${green}success${normal}"
+# echo "${green}0.052${normal} ${bold}${green}2,816.00 kb${normal}"
+# --- COLORS SUPPORT --- # ends here #

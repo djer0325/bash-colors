@@ -1,0 +1,27 @@
+#!/bin/bash
+
+### --- LOGGING --- ### starts here #
+
+function _msg2err_ () {
+  declare -xr local format="${1}"
+  shift
+  printf -- "${_normal_}${_gray_}${_faint_}[%s(%s):%s]${_normal_} ${format}\n" "$( basename "${BASH_SOURCE[2]}" )" "${BASH_LINENO[1]}" "${FUNCNAME[2]}" "$@" >&2
+}; export -f _msg2err_; readonly -f _msg2err_;
+
+function _fstderr_ () {
+  declare -xr local format="${1}"
+  shift
+  printf -- "${format}" "$@" >&2
+}; export -f _fstderr_; readonly -f _fstderr_;
+
+function _die_error_  () { printf -- "${_normal_}${_red_}ERROR${_normal_}:   " >&2; _msg2err_ "$@" >&2; exit 1; }; export -f _die_error_;  readonly -f _die_error_;
+function _exit_error_ () { printf -- "${_normal_}${_red_}ERROR${_normal_}:   " >&2; _msg2err_ "$@" >&2; exit 1; }; export -f _exit_error_; readonly -f _exit_error_;
+function _erro_       () { [[ ${_std2_level_} -lt 10 ]] && true || { printf -- "${_normal_}${_red_}ERROR${_normal_}:   "    >&2; _msg2err_ "$@" >&2; exit 1; }; }; export -f _erro_; readonly -f _erro_;
+function _warn_       () { [[ ${_std2_level_} -lt 20 ]] && true || { printf -- "${_normal_}${_yellow_}WARNING${_normal_}: " >&2; _msg2err_ "$@" >&2;         }; }; export -f _warn_; readonly -f _warn_;
+function _info_       () { [[ ${_std2_level_} -lt 30 ]] && true || { printf -- "${_normal_}${_cyan_}INFO${_normal_}:    "   >&2; _msg2err_ "$@" >&2;         }; }; export -f _info_; readonly -f _info_;
+function _mesg_       () { [[ ${_std2_level_} -lt 90 ]] && true || _msg2err_ "$@" >&2; }; export -f _mesg_; readonly -f _mesg_;
+function _umsg_       () { _msg2err_ "$@" >&2; }; export -f _umsg_; readonly -f _umsg_;
+function _msg2_       () { _fstderr_ "$@" >&2; }; export -f _msg2_; readonly -f _msg2_;
+function _noop_       () { true; }; export -f _noop_; readonly -f _noop_;
+
+### --- LOGGING --- ### ends here #
