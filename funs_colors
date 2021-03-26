@@ -11,8 +11,6 @@
 declare -rx _esc_=$'\e'; # Escape code (ANSI Escape Codes)
 declare -rx _csi_="${_esc_}["; # Control Sequence Introducer (ANSI Escape Codes)
 declare -rx _ncolors_=$( tput colors 2>/dev/null || "" )
-eval "declare -rA _ac_=( $( for a in {0..255}; do printf -- " [${a}]=\"${_csi_}38;5;${a}m\""; done ) )"
-eval "declare -rA _ab_=( $( for a in {0..255}; do printf -- " [${a}]=\"${_csi_}48;5;${a}m\""; done ) )"
 declare -rA _color_qualifiers_=( [normal]="${_csi_}0m" [reset]="${_csi_}0m"
    [bold]="${_csi_}1m"             [faint]="${_csi_}2m"      [italic]="${_csi_}3m" 
    [underline]="${_csi_}4m"        [blink]="${_csi_}5m"     [reverse]="${_csi_}7m"
@@ -21,6 +19,10 @@ declare -rA _color_qualifiers_=( [normal]="${_csi_}0m" [reset]="${_csi_}0m"
    [encircled]="${_csi_}52m"    [standout]="$(tput smso  2>/dev/null)" )
 declare -r  _color_names_=(  black  maroon green olive  navy purple  teal silver
                              gray   red    lime  yellow blue magenta cyan white )
+eval "declare -A _ac_=( $( for a in {0..255}; do printf -- " [${a}]=\"${_csi_}38;5;${a}m\""; done ) )"; _ac_[0]="${_csi_}38;5;16m"; declare -r _ac_
+eval "declare -A _ab_=( $( for a in {0..255}; do printf -- " [${a}]=\"${_csi_}48;5;${a}m\""; done ) )"; _ab_[0]="${_csi_}48;5;16m"; declare -r _ab_
+eval "declare -rA _cn_=( $( i=0; for a in ${_color_names_[@]}; do printf -- " [${a}]=\"${_ac_[${i}]}\""; (( ++i )); done ) )"
+eval "declare -rA _bn_=( $( i=0; for a in ${_color_names_[@]}; do printf -- " [${a}]=\"${_ab_[${i}]}\""; (( ++i )); done ) )"
 [[ -n "${_ncolors_}" ]] && {
   for a in ${!_color_qualifiers_[@]}; do
 		eval "declare -xr export _${a}_=\"${_color_qualifiers_[${a}]}\"; (( ++i ));";
@@ -28,21 +30,24 @@ declare -r  _color_names_=(  black  maroon green olive  navy purple  teal silver
 	declare -i i=0;
 	for a in ${_color_names_[@]}; do
 		[[ ${_ncolors_} -le 16 ]] && [[ ${i} -ge 8 ]] && k=8 || k=0;
-		eval "declare -x export _${a}_=\"${_ac_[$(( ${i} - ${k} ))]}\"; (( ++i ));";
+		eval "declare -x export _${a}_=\"${_ac_[$(( ${i} - ${k} ))]}\"; declare -x export _b${a}_=\"${_ab_[$(( ${i} - ${k} ))]}\"; (( ++i ));";
 	done
 	[[ ${_ncolors_} -lt 256 ]] && { for i in {8..15}; do k=$(( ${i} - 8 )); eval "_${_color_names_[${i}]}_=\"${_ac_[${k}]}\""; done; }
+	[[ ${_ncolors_} -lt 256 ]] && { for i in {8..15}; do k=$(( ${i} - 8 )); eval "_b${_color_names_[${i}]}_=\"${_ab_[${k}]}\""; done; }
 	for a in ${_color_names_[@]}; do eval "readonly _${a}_"; done
+	for a in ${_color_names_[@]}; do eval "readonly _b${a}_"; done
 	#_mesg_ "support for %d colors ..." ${ncolors} 2>/dev/null
 } || {
 	for a in ${!_color_qualifiers_[@]}; do eval "declare -xr export _${a}_=\"\"; (( ++i ));"; done
 	for a in ${_color_names_}; do eval "declare -xr export _${a}_=\"\"; (( ++i ));"; done
+	for a in ${_color_names_}; do eval "declare -xr export _b${a}_=\"\"; (( ++i ));"; done
  	#_mesg_ "no support for colors ..." 2>/dev/null
 }
 readonly _color_names_
 readonly _color_others_
-eval "declare -rA _cn_=( $( i=0; for a in ${_color_names_[@]}; do printf -- " [${a}]=\"${_ac_[${i}]}\""; (( ++i )); done ) )"
 #examples
-# echo "${red}error${normal}"
-# echo "${green}success${normal}"
-# echo "${green}0.052${normal} ${bold}${green}2,816.00 kb${normal}"
+# echo "{_normal_}${_red_}error${_normal_}"
+# echo "{_normal_}${_white_}${_bred_}error${_normal_}"
+# echo "${_green_}success${_normal_}"
+# echo "${_green_}0.052${_normal_} ${_bold_}$_{green_}2,816.00 kb${_normal_}"
 # --- COLORS SUPPORT --- # ends here #

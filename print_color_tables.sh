@@ -56,7 +56,9 @@ function main () {
 
   printf -- "${_normal_}\n"
 
-	_umsg_ " ${_normal_}${_bold_}${_italic_}${_ac_[208]}sample message (color 208)${_normal_} \n"
+ _umsg_ " ${_normal_}${_bold_}${_italic_}${_ac_[208]}sample message (color 208)${_normal_} \n"
+ _umsg_ " ${_normal_}${_bold_}${_white_}${_bred_}sample message white on backgroud red${_normal_} \n"
+ _umsg_ " ${_normal_}${_bold_}${_black_}${_bred_}sample message black on backgroud red${_normal_} \n"
 
 }
 
